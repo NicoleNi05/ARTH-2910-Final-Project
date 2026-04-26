@@ -1,0 +1,845 @@
+:root {
+  --bg-top: #d6ebf8;
+  --bg-bottom: #f8efe0;
+  --paper: rgba(248, 240, 223, 0.96);
+  --paper-warm: rgba(244, 231, 205, 0.96);
+  --ink: #36454f;
+  --ink-soft: rgba(54, 69, 79, 0.72);
+  --accent: #8a5a44;
+  --accent-soft: rgba(138, 90, 68, 0.14);
+  --shadow: rgba(61, 54, 45, 0.18);
+  --outline: rgba(98, 76, 64, 0.72);
+  --paper-shadow: rgba(77, 59, 47, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Zen Kaku Gothic New", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.8), transparent 32%),
+    linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(109, 91, 73, 0.08) 0 1.5px, transparent 1.5px 100%),
+    radial-gradient(circle at 76% 34%, rgba(255, 255, 255, 0.09) 0 1.4px, transparent 1.4px 100%),
+    radial-gradient(circle at 38% 72%, rgba(122, 103, 84, 0.07) 0 1.8px, transparent 1.8px 100%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(120, 104, 86, 0.05) 0 1px,
+      transparent 1px 5px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0 1px,
+      transparent 1px 6px
+    ),
+    radial-gradient(circle at 18% 24%, rgba(255, 255, 255, 0.18), transparent 20%),
+    radial-gradient(circle at 73% 68%, rgba(112, 94, 77, 0.08), transparent 24%);
+  mix-blend-mode: multiply;
+  opacity: 0.78;
+  pointer-events: none;
+  z-index: 0;
+}
+
+button,
+dialog {
+  font: inherit;
+}
+
+.page-shell {
+  width: min(1280px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+.scene-frame {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.2));
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 28px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 22px 55px var(--shadow);
+  padding: clamp(0.75rem, 2vw, 1rem);
+}
+
+.scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2388 / 1668;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #d6ebf8;
+}
+
+.scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 62%, rgba(250, 230, 196, 0.12) 100%);
+  pointer-events: none;
+}
+
+.scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 16% 22%, rgba(112, 94, 77, 0.08) 0 1.3px, transparent 1.3px 100%),
+    radial-gradient(circle at 68% 58%, rgba(255, 255, 255, 0.08) 0 1.2px, transparent 1.2px 100%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0 1px,
+      transparent 1px 6px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(114, 95, 79, 0.05) 0 1px,
+      transparent 1px 5px
+    ),
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.12), transparent 16%);
+  mix-blend-mode: multiply;
+  opacity: 0.62;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.layer-sky,
+.layer-ticket {
+  z-index: 1;
+}
+
+.layer-passenger {
+  z-index: 2;
+}
+
+.layer-train,
+.layer-bell {
+  z-index: 3;
+}
+
+.cloud-strip {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 200%;
+  height: 100%;
+  display: flex;
+  animation: cloudLoop 32s linear infinite;
+  pointer-events: none;
+}
+
+.layer-clouds {
+  position: relative;
+  inset: auto;
+  width: 50%;
+  height: 100%;
+  flex: 0 0 50%;
+}
+
+.cloud-copy {
+  margin-left: -3%;
+}
+
+.layer-train,
+.layer-bell {
+  transform-origin: center bottom;
+  animation: sway 4.8s ease-in-out infinite;
+}
+
+.layer-passenger {
+  animation-name: passengerGlide;
+  animation-duration: 9s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  transform-origin: center bottom;
+}
+
+.layer-bell {
+  transform-origin: 38.6% 37%;
+  animation-duration: 3.1s;
+}
+
+.layer-bell.ringing {
+  animation: bellSwing 1.35s ease-in-out 1;
+}
+
+.layer-wave {
+  transform-origin: center center;
+}
+
+.layer-wave-bottom {
+  z-index: 3;
+  animation: waterDriftBack 6.2s linear infinite;
+}
+
+.layer-wave-top {
+  z-index: 4;
+  animation: waterDriftFront 3.9s linear infinite;
+}
+
+.passenger-one,
+.thought-one {
+  --drift-start: -0.2%;
+  --drift-mid: 0.15%;
+  --drift-end: 0.45%;
+  animation-duration: 8.4s;
+}
+
+.passenger-two,
+.thought-two {
+  --drift-start: 0.1%;
+  --drift-mid: -0.12%;
+  --drift-end: 0.22%;
+  animation-duration: 9.6s;
+  animation-delay: 0.5s;
+}
+
+.passenger-three,
+.thought-three {
+  --drift-start: -0.72%;
+  --drift-mid: -0.44%;
+  --drift-end: -0.1%;
+  animation-duration: 10.1s;
+  animation-delay: 1s;
+}
+
+.passenger-three {
+  opacity: 0.98;
+}
+
+.hotspot {
+  position: absolute;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 5;
+  padding: 0;
+}
+
+.hotspot span {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.5rem);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: white;
+  background: rgba(30, 45, 59, 0.76);
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  pointer-events: none;
+}
+
+.hotspot:hover span,
+.hotspot:focus-visible span {
+  opacity: 1;
+}
+
+.hotspot:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 4px;
+  border-radius: 14px;
+}
+
+.hotspot-bell {
+  left: 35%;
+  top: 35%;
+  width: 5%;
+  height: 17%;
+}
+
+.hotspot-ticket {
+  left: 3%;
+  top: 2%;
+  width: 16%;
+  height: 37%;
+}
+
+.hotspot-passenger-1 {
+  left: 47%;
+  top: 51%;
+  width: 5%;
+  height: 21%;
+}
+
+.hotspot-passenger-2 {
+  left: 70%;
+  top: 51%;
+  width: 5.5%;
+  height: 20%;
+}
+
+.hotspot-passenger-3 {
+  left: 83.5%;
+  top: 52%;
+  width: 5.5%;
+  height: 18%;
+}
+
+.speech-bubble {
+  position: absolute;
+  left: var(--bubble-left, 63%);
+  top: var(--bubble-top, 42%);
+  width: min(30%, 320px);
+  padding: 1rem 1.2rem 1.05rem;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.45), transparent 24%),
+    linear-gradient(180deg, var(--paper), var(--paper-warm));
+  border: 2px solid var(--outline);
+  border-radius: 22px 18px 24px 16px;
+  box-shadow:
+    0 16px 30px var(--paper-shadow),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  z-index: 6;
+  transform: rotate(-1.2deg);
+  backdrop-filter: blur(0.4px);
+  transform-origin: left bottom;
+}
+
+.speech-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -15px;
+  left: 1.2rem;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(180deg, var(--paper), var(--paper-warm));
+  border-right: 2px solid var(--outline);
+  border-bottom: 2px solid var(--outline);
+  transform: rotate(38deg);
+  border-bottom-right-radius: 4px;
+}
+
+.speech-bubble::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px dashed rgba(125, 97, 79, 0.24);
+  border-radius: 18px 14px 20px 12px;
+  pointer-events: none;
+}
+
+.speech-bubble p {
+  margin: 0;
+  font-size: clamp(0.85rem, 1.4vw, 1.02rem);
+  line-height: 1.55;
+  color: var(--ink);
+  font-family: "ZCOOL XiaoWei", "Zen Kaku Gothic New", serif;
+  letter-spacing: 0.01em;
+  text-shadow:
+    0.55px 0 rgba(54, 69, 79, 0.2),
+    -0.35px 0 rgba(138, 90, 68, 0.08);
+  filter: blur(0.16px);
+}
+
+.speech-bubble.is-entering {
+  animation: bubbleBloom 360ms cubic-bezier(0.18, 0.8, 0.28, 1) both;
+}
+
+.speech-bubble.is-entering p {
+  animation: textLift 420ms ease-out both;
+}
+
+.speech-bubble.is-entering .speech-close {
+  animation: closeFade 260ms ease-out both;
+}
+
+.speech-close {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.55rem;
+  border: 0;
+  background: transparent;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+  filter: blur(0.1px);
+}
+
+.hidden {
+  display: none;
+}
+
+.scene-buttons {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.7rem;
+  z-index: 8;
+}
+
+.scene-button {
+  border: 2px solid var(--outline);
+  border-radius: 18px 22px 20px 16px;
+  background:
+    radial-gradient(circle at 22% 26%, rgba(255, 255, 255, 0.4), transparent 26%),
+    linear-gradient(180deg, rgba(248, 240, 223, 0.96), rgba(239, 225, 197, 0.96));
+  color: var(--ink);
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+  font-family: "ZCOOL XiaoWei", "Zen Kaku Gothic New", serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  box-shadow: 0 10px 20px rgba(58, 46, 39, 0.12);
+  filter: blur(0.06px);
+}
+
+.scene-button:hover,
+.scene-button:focus-visible {
+  background:
+    radial-gradient(circle at 22% 26%, rgba(255, 255, 255, 0.5), transparent 26%),
+    linear-gradient(180deg, rgba(255, 247, 234, 0.98), rgba(246, 233, 205, 0.98));
+}
+
+.scene-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(28, 30, 33, 0.72);
+  backdrop-filter: blur(10px);
+  z-index: 30;
+  padding: 1.5rem;
+}
+
+.scene-overlay.hidden {
+  display: none;
+}
+
+.scene-overlay-card {
+  width: min(100%, 1080px);
+  max-height: calc(100vh - 3rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
+  gap: 1rem;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.4), transparent 24%),
+    linear-gradient(180deg, rgba(248, 240, 223, 0.98), rgba(239, 225, 197, 0.98));
+  border: 2px solid var(--outline);
+  border-radius: 26px 18px 28px 20px;
+  box-shadow: 0 22px 70px rgba(20, 21, 24, 0.3);
+  position: relative;
+  animation: overlayBloom 320ms cubic-bezier(0.18, 0.8, 0.28, 1) both;
+}
+
+.scene-overlay-card::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px dashed rgba(125, 97, 79, 0.22);
+  border-radius: 20px 14px 24px 16px;
+  pointer-events: none;
+}
+
+.scene-overlay img {
+  width: 100%;
+  height: 100%;
+  max-height: calc(100vh - 5rem);
+  object-fit: contain;
+  border-radius: 16px;
+  border: 1.5px solid rgba(98, 76, 64, 0.45);
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.scene-overlay-text {
+  align-self: center;
+  padding: 0.6rem 0.4rem 0.6rem 0.2rem;
+}
+
+.scene-overlay-text h2 {
+  margin: 0 0 0.8rem;
+  font-family: "ZCOOL XiaoWei", "Cormorant Garamond", serif;
+  font-size: clamp(1.6rem, 2.6vw, 2.4rem);
+  letter-spacing: 0.02em;
+}
+
+.scene-overlay-text p {
+  margin: 0;
+  white-space: pre-line;
+  line-height: 1.8;
+  font-family: "ZCOOL XiaoWei", "Zen Kaku Gothic New", serif;
+  font-size: clamp(0.98rem, 1.5vw, 1.1rem);
+  text-shadow: 0.35px 0 rgba(54, 69, 79, 0.14);
+  filter: blur(0.06px);
+}
+
+.scene-overlay-close {
+  position: fixed;
+  top: 1.2rem;
+  right: 1.2rem;
+  border: 0;
+  background: rgba(250, 244, 232, 0.92);
+  color: var(--ink);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 31;
+  box-shadow: 0 10px 24px rgba(20, 21, 24, 0.2);
+}
+
+.thought-bubble {
+  position: absolute;
+  z-index: 5;
+  border: 2px solid var(--outline);
+  cursor: pointer;
+  padding: 0.2rem 0.62rem 0.34rem;
+  border-radius: 18px 24px 18px 22px;
+  background:
+    radial-gradient(circle at 22% 26%, rgba(255, 255, 255, 0.48), transparent 26%),
+    linear-gradient(180deg, rgba(249, 241, 224, 0.98), rgba(241, 227, 198, 0.96));
+  color: #54646f;
+  box-shadow:
+    0 10px 24px rgba(58, 46, 39, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  font-family: "Covered By Your Grace", "Cormorant Garamond", serif;
+  font-size: clamp(1.15rem, 2vw, 1.65rem);
+  line-height: 1;
+  animation-name: passengerGlide;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  transform: rotate(-2deg);
+  letter-spacing: 0.04em;
+  text-shadow:
+    0.45px 0 rgba(54, 69, 79, 0.18),
+    -0.25px 0 rgba(138, 90, 68, 0.08);
+  filter: blur(0.16px);
+}
+
+.thought-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0.95rem;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(180deg, rgba(249, 241, 224, 0.98), rgba(241, 227, 198, 0.96));
+  border-right: 2px solid var(--outline);
+  border-bottom: 2px solid var(--outline);
+  transform: rotate(36deg);
+  border-bottom-right-radius: 3px;
+}
+
+.thought-bubble::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed rgba(125, 97, 79, 0.18);
+  border-radius: 14px 18px 14px 17px;
+  pointer-events: none;
+}
+
+.thought-bubble:hover,
+.thought-bubble:focus-visible {
+  background:
+    radial-gradient(circle at 22% 26%, rgba(255, 255, 255, 0.54), transparent 26%),
+    linear-gradient(180deg, rgba(254, 249, 238, 0.99), rgba(246, 233, 205, 0.97));
+}
+
+.thought-one {
+  left: 45.9%;
+  top: 45.7%;
+}
+
+.thought-two {
+  left: 68.7%;
+  top: 45.3%;
+}
+
+.thought-three {
+  left: 81.4%;
+  top: 45.8%;
+}
+
+.music-status {
+  display: none;
+}
+
+@keyframes cloudLoop {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.45deg);
+  }
+
+  50% {
+    transform: translateY(0.45%) rotate(0.45deg);
+  }
+}
+
+@keyframes passengerGlide {
+  0% {
+    transform: translateX(var(--drift-start, 0)) translateY(0.15%);
+  }
+
+  18% {
+    transform: translateX(var(--drift-mid, 0.25%)) translateY(0%);
+  }
+
+  34% {
+    transform: translateX(var(--drift-mid, 0.25%)) translateY(0%);
+  }
+
+  55% {
+    transform: translateX(var(--drift-end, 0.7%)) translateY(0.12%);
+  }
+
+  74% {
+    transform: translateX(var(--drift-end, 0.7%)) translateY(0.12%);
+  }
+
+  100% {
+    transform: translateX(var(--drift-start, 0)) translateY(0.15%);
+  }
+}
+
+@keyframes bubbleBloom {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94) rotate(-2.8deg);
+  }
+
+  65% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.015) rotate(-0.8deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(-1.2deg);
+  }
+}
+
+@keyframes textLift {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+    letter-spacing: 0.04em;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: 0.01em;
+  }
+}
+
+@keyframes closeFade {
+  0% {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes imageCardBloom {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96) rotate(2.4deg);
+  }
+
+  65% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.01) rotate(0.6deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(1deg);
+  }
+}
+
+@keyframes overlayBloom {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes waterDriftBack {
+  0% {
+    transform: translateX(-1.1%) scaleX(1.01) scaleY(1.003);
+  }
+
+  25% {
+    transform: translateX(-0.2%) scaleX(1.006) scaleY(0.998);
+  }
+
+  50% {
+    transform: translateX(0.9%) scaleX(1.014) scaleY(1.004);
+  }
+
+  75% {
+    transform: translateX(0.1%) scaleX(1.008) scaleY(0.998);
+  }
+
+  100% {
+    transform: translateX(-1.1%) scaleX(1.01) scaleY(1.003);
+  }
+}
+
+@keyframes waterDriftFront {
+  0% {
+    transform: translateX(-2.1%) scaleX(1.024) scaleY(1.006);
+  }
+
+  25% {
+    transform: translateX(-0.8%) scaleX(1.014) scaleY(0.997);
+  }
+
+  50% {
+    transform: translateX(1.7%) scaleX(1.03) scaleY(1.008);
+  }
+
+  75% {
+    transform: translateX(0.35%) scaleX(1.018) scaleY(0.995);
+  }
+
+  100% {
+    transform: translateX(-2.1%) scaleX(1.024) scaleY(1.006);
+  }
+}
+
+@keyframes bellSwing {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  15% {
+    transform: rotate(-11deg);
+  }
+
+  30% {
+    transform: rotate(8deg);
+  }
+
+  45% {
+    transform: rotate(-6deg);
+  }
+
+  60% {
+    transform: rotate(4deg);
+  }
+
+  75% {
+    transform: rotate(-2.5deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .page-shell {
+    width: min(100vw - 1rem, 100%);
+    padding-top: 1rem;
+  }
+
+  .speech-bubble {
+    width: 40%;
+  }
+
+  .music-status {
+    width: 80%;
+    font-size: 0.78rem;
+  }
+
+  .scene-buttons {
+    flex-wrap: wrap;
+    width: 82%;
+    justify-content: center;
+  }
+
+  .scene-overlay-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .intro {
+    margin-bottom: 1rem;
+  }
+
+  .speech-bubble {
+    width: 48%;
+    padding: 0.8rem;
+  }
+
+  .speech-bubble p {
+    font-size: 0.76rem;
+  }
+
+  .thought-bubble {
+    font-size: 0.95rem;
+    padding: 0.18rem 0.45rem 0.28rem;
+  }
+
+  .scene-button {
+    font-size: 0.78rem;
+    padding: 0.45rem 0.72rem;
+  }
+
+  .scene-overlay {
+    padding: 0.8rem;
+  }
+
+  .scene-overlay-card {
+    padding: 0.8rem;
+    gap: 0.7rem;
+  }
+}

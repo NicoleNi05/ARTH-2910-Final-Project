@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Train</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #dedad3; }
+
+    #container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Main image — fills viewport, aspect ratio preserved */
+    #main-img {
+      display: block;
+      max-width: 100%;
+      max-height: 100vh;
+      width: auto;
+      height: auto;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* ── Overlays (all position:absolute relative to #container) ── */
+
+    /* Spinning wheel overlays */
+    .wheel-div {
+      position: absolute;
+      border-radius: 50%;
+      background-image: url('wheel.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .wheel-div.spinning {
+      opacity: 1;
+      animation: wspin 0.65s linear infinite;
+    }
+    @keyframes wspin { to { transform: rotate(360deg); } }
+
+    /* Click zones */
+    .hotspot {
+      position: absolute;
+      cursor: pointer;
+      /* outline: 2px solid red; */ /* ← uncomment to debug */
+    }
+
+    /* "Click me!" callout */
+    .click-label {
+      position: absolute;
+      font-family: Georgia, serif;
+      font-size: 14px;
+      font-style: italic;
+      color: #111;
+      background: rgba(255, 253, 245, 0.94);
+      border: 1.3px solid #555;
+      border-radius: 7px;
+      padding: 5px 12px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 20;
+      transition: opacity 0.25s;
+    }
+    .click-label.hidden { opacity: 0; }
+    #chimney-lbl { pointer-events: auto; cursor: pointer; }
+    #door-lbl    { pointer-events: auto; cursor: pointer; }
+    .no-tail::after { display: none; }
+    /* Tail pointing left — bubble sits to the right of the train */
+    .bubble.right-of::after {
+      bottom: auto;
+      top: 18px;
+      left: -10px;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 10px solid #2d2d2d;
+      border-left: none;
+    }
+
+    /* Arrow overlay */
+    #arrow-svg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 19;
+      overflow: visible;
+    }
+
+    /* Speech bubble */
+    .bubble {
+      position: absolute;
+      background: #fffefa;
+      border: 1.5px solid #2d2d2d;
+      border-radius: 10px;
+      padding: 14px 18px;
+      width: 250px;
+      font-size: 13.5px;
+      line-height: 1.72;
+      color: #1a1a1a;
+      font-family: Georgia, serif;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(6px) scale(0.95);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 30;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.14);
+    }
+    .bubble.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 22px;
+      width: 0; height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #2d2d2d;
+    }
+    /* Tail pointing up — bubble sits below the hotspot */
+    .bubble.below::after {
+      bottom: auto;
+      top: -10px;
+      border-top: none;
+      border-bottom: 10px solid #2d2d2d;
+    }
+  </style>
+</head>
+<body>
+<div id="container">
+  <img id="main-img" src="train7.png" alt="Train illustration">
+
+  <svg id="arrow-svg" aria-hidden="true">
+    <defs>
+      <marker id="arr" markerWidth="9" markerHeight="6"
+              refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 9 3, 0 6" fill="#222"/>
+      </marker>
+    </defs>
+  </svg>
+
+  <div class="wheel-div" id="wd0"></div>
+  <div class="wheel-div" id="wd1"></div>
+  <div class="wheel-div" id="wd2"></div>
+  <div class="wheel-div" id="wd3"></div>
+
+  <div class="hotspot" id="man-hs"></div>
+  <div class="hotspot" id="wheel-hs"></div>
+
+  <div class="click-label" id="man-lbl">Click me!</div>
+  <div class="click-label" id="wheel-lbl">Click me!</div>
+  <div class="click-label" id="chimney-lbl">Click me!</div>
+  <div class="click-label" id="door-lbl">Click me!</div>
+
+  <div class="bubble" id="man-bub">
+    This worker represents how the urban space has colonized the suburbs.
+  </div>
+  <div class="bubble" id="wheel-bub">
+    The fast speed of the train highlights its intrusive nature, which contrasts with the calmness of the suburbs. This emphasizes the difference between these two distinct worlds.
+  </div>
+  <div class="bubble no-tail right-of" id="door-bub">
+    The train itself connects the urban and suburban spaces together. The suburbs' reliance on the urban schedule reveals the dependent nature of the suburbs on the city, highlighting how the city has "colonized" the suburbs.
+  </div>
+  <div class="bubble no-tail" id="chimney-bub">
+    The "world" on the other side of the tracks is a trap. Although far from the suburbs in terms of distance, the people who live in the suburbs must rely on the city, therefore being trapped by it.
+  </div>
+</div>
+
+<script>
+  const IMG = 'train7.png';
+
+  // ── Hotspot definitions as fractions of the source image ───────────────
+  // Man silhouette — centre + half-extents
+  const MAN = { cx: 0.255, cy: 0.530, hw: 0.030, hh: 0.075 };
+
+  // Chimney label position (the label itself is the clickable hotspot)
+  const CHIMNEY_LBL = { cx: 0.80, cy: 0.21 };
+
+  // Door label position (the label itself is the clickable hotspot)
+  const DOOR_LBL = { cx: 0.41, cy: 0.58 };
+
+  // 4 drawn wheel centres + radius
+  const WHEELS = [
+    { cx: 0.135, cy: 0.695, r: 0.026 },
+    { cx: 0.213, cy: 0.695, r: 0.026 },
+    { cx: 0.328, cy: 0.695, r: 0.026 },
+    { cx: 0.406, cy: 0.695, r: 0.026 },
+  ];
+
+  // ── Elements ───────────────────────────────────────────────────────────
+  const mainImg    = document.getElementById('main-img');
+  const arrowSvg   = document.getElementById('arrow-svg');
+  const manHS      = document.getElementById('man-hs');
+  const wheelHS    = document.getElementById('wheel-hs');
+  const manBub     = document.getElementById('man-bub');
+  const wheelBub   = document.getElementById('wheel-bub');
+  const chimneyBub = document.getElementById('chimney-bub');
+  const doorBub    = document.getElementById('door-bub');
+  const manLbl     = document.getElementById('man-lbl');
+  const wheelLbl   = document.getElementById('wheel-lbl');
+  const chimneyLbl = document.getElementById('chimney-lbl');
+  const doorLbl    = document.getElementById('door-lbl');
+  const wDivs      = [0,1,2,3].map(i => document.getElementById(`wd${i}`));
+
+  // ── Layout ─────────────────────────────────────────────────────────────
+  // Read img rendered bounds from the DOM — reliable regardless of DPI or
+  // preview zoom level
+  function getImgBounds() {
+    const r = mainImg.getBoundingClientRect();
+    const cr = mainImg.closest('#container').getBoundingClientRect();
+    return {
+      left: r.left - cr.left,
+      top:  r.top  - cr.top,
+      w:    r.width,
+      h:    r.height,
+    };
+  }
+
+  function toPx(fx, fy, b) {
+    return { x: b.left + fx * b.w, y: b.top + fy * b.h };
+  }
+
+  function layout() {
+    const b = getImgBounds();
+
+    // ── Wheel overlay divs ──
+    WHEELS.forEach((w, i) => {
+      const cp = toPx(w.cx, w.cy, b);
+      const r  = w.r * b.w;
+      const l  = cp.x - r, t = cp.y - r;
+      const div = wDivs[i];
+      div.style.left   = `${l}px`;
+      div.style.top    = `${t}px`;
+      div.style.width  = `${r * 2}px`;
+      div.style.height = `${r * 2}px`;
+    });
+
+    // ── Man hotspot ──
+    const mc  = toPx(MAN.cx, MAN.cy, b);
+    const mhW = MAN.hw * b.w * 2;
+    const mhH = MAN.hh * b.h * 2;
+    setBox(manHS, mc.x - mhW / 2, mc.y - mhH / 2, mhW, mhH);
+    manCentreX = mc.x;
+
+    // ── Wheels hotspot (bounding box around all 4 wheels) ──
+    const pad = 0.008;
+    const tl  = toPx(WHEELS[0].cx - WHEELS[0].r - pad, WHEELS[0].cy - WHEELS[0].r - pad, b);
+    const br  = toPx(WHEELS[3].cx + WHEELS[3].r + pad, WHEELS[3].cy + WHEELS[3].r + pad, b);
+    setBox(wheelHS, tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+
+    // Wheel group midpoint (for arrow tip)
+    const wMidCx = (WHEELS[0].cx + WHEELS[3].cx) / 2;
+    const wMidCy = WHEELS[0].cy;
+    const wMidPx = toPx(wMidCx, wMidCy, b);
+
+    // ── Chimney label (is its own hotspot) ──
+    const clp = toPx(CHIMNEY_LBL.cx, CHIMNEY_LBL.cy, b);
+    const clW = chimneyLbl.offsetWidth;
+    chimneyLbl.style.left = `${Math.max(6, Math.min(clp.x - clW / 2, window.innerWidth - clW - 6))}px`;
+    chimneyLbl.style.top  = `${clp.y}px`;
+
+    // ── Door label (is its own hotspot) ──
+    const dlp = toPx(DOOR_LBL.cx, DOOR_LBL.cy, b);
+    const dlW = doorLbl.offsetWidth;
+    doorLbl.style.left = `${Math.max(6, Math.min(dlp.x - dlW / 2, window.innerWidth - dlW - 6))}px`;
+    doorLbl.style.top  = `${dlp.y}px`;
+
+    positionLabels(mc, mhH, tl, wMidPx);
+  }
+
+  function setBox(el, x, y, w, h) {
+    el.style.left   = `${x}px`;
+    el.style.top    = `${y}px`;
+    el.style.width  = `${w}px`;
+    el.style.height = `${h}px`;
+  }
+
+  // ── Labels & arrows ────────────────────────────────────────────────────
+  function positionLabels(mc, mhH, wTL, wMidPx) {
+    const cw = window.innerWidth;
+
+    // Man label: close above the man centre
+    const mlW = manLbl.offsetWidth, mlH = manLbl.offsetHeight;
+    const mlX = Math.min(mc.x - mlW / 2, cw - mlW - 6);
+    const mlY = mc.y - mlH - 4;
+    manLbl.style.left = `${Math.max(6, mlX)}px`;
+    manLbl.style.top  = `${Math.max(6, mlY)}px`;
+
+    // Wheels label: to the right of the wheel group
+    const wlW = wheelLbl.offsetWidth, wlH = wheelLbl.offsetHeight;
+    const wlX = wMidPx.x + 60;
+    const wlY = wMidPx.y - wlH / 2;
+    wheelLbl.style.left = `${Math.min(wlX, cw - wlW - 6)}px`;
+    wheelLbl.style.top  = `${wlY}px`;
+
+    drawArrows(mc, mhH, wMidPx);
+  }
+
+  function drawArrows(mc, mhH, wMidPx) {
+    arrowSvg.querySelectorAll('.arr-line').forEach(l => l.remove());
+
+    // Man arrow: bottom-centre of label → man centre
+    const mlX = parseFloat(manLbl.style.left);
+    const mlY = parseFloat(manLbl.style.top);
+    const mlW = manLbl.offsetWidth, mlH = manLbl.offsetHeight;
+    addArrow(mlX + mlW / 2, mlY + mlH, mc.x, mc.y);
+
+    // Wheels arrow: left edge of label → wheel group centre
+    const wlX = parseFloat(wheelLbl.style.left);
+    const wlY = parseFloat(wheelLbl.style.top);
+    const wlH = wheelLbl.offsetHeight;
+    addArrow(wlX, wlY + wlH / 2, wMidPx.x, wMidPx.y);
+  }
+
+  function addArrow(x1, y1, x2, y2) {
+    const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    ln.classList.add('arr-line');
+    ln.setAttribute('x1', x1); ln.setAttribute('y1', y1);
+    ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
+    ln.setAttribute('stroke', '#222');
+    ln.setAttribute('stroke-width', '2');
+    ln.setAttribute('marker-end', 'url(#arr)');
+    arrowSvg.appendChild(ln);
+  }
+
+  // ── Spin ───────────────────────────────────────────────────────────────
+  function startSpin() { wDivs.forEach(d => d.classList.add('spinning')); }
+  function stopSpin()  { wDivs.forEach(d => d.classList.remove('spinning')); }
+
+  // ── Bubbles ────────────────────────────────────────────────────────────
+  // tailTargetX: positions bubble so the ::after tail tip lands at that x
+  // below: if true, bubble appears below the hotspot with an upward-pointing tail
+  function showBubble(bub, hs, tailTargetX = null, below = false, rightOf = false) {
+    const r  = hs.getBoundingClientRect();
+    const bw = 250;
+
+    if (rightOf) {
+      bub.classList.remove('below');
+      bub.style.bottom = '';
+      bub.style.left = `${Math.min(r.right + 14, window.innerWidth - bw - 6)}px`;
+      const bh = bub.offsetHeight || 110;
+      bub.style.top = `${Math.max(6, r.top + r.height / 2 - bh / 2)}px`;
+      bub.classList.add('show');
+      return;
+    }
+
+    if (below) {
+      bub.classList.add('below');
+      bub.style.bottom = '';
+      bub.style.top    = `${r.bottom + 10}px`;
+    } else {
+      bub.classList.remove('below');
+      bub.style.top    = '';
+      bub.style.bottom = `${window.innerHeight - r.top + 10}px`;
+    }
+
+    let left = tailTargetX !== null
+      ? tailTargetX - 32
+      : r.left + r.width / 2 - bw / 2;
+    left = Math.max(6, Math.min(left, window.innerWidth - bw - 6));
+    bub.style.left = `${left}px`;
+    bub.classList.add('show');
+  }
+
+  // ── Interaction ────────────────────────────────────────────────────────
+  let active = null;
+  let manCentreX = null;
+
+  function closeAll() {
+    manBub.classList.remove('show');
+    wheelBub.classList.remove('show');
+    chimneyBub.classList.remove('show');
+    doorBub.classList.remove('show');
+    stopSpin();
+    active = null;
+    manLbl.classList.remove('hidden');
+    wheelLbl.classList.remove('hidden');
+    chimneyLbl.classList.remove('hidden');
+    doorLbl.classList.remove('hidden');
+    layout();
+  }
+
+  function activate(who, bub, hs, lbl) {
+    if (active === who) { closeAll(); return; }
+    closeAll();
+    active = who;
+    lbl.classList.add('hidden');
+    arrowSvg.querySelectorAll('.arr-line').forEach(l => l.remove());
+    const below   = who === 'wheels' || who === 'chimney';
+    const rightOf = who === 'door';
+    const tailX   = who === 'man' ? manCentreX : null;
+    showBubble(bub, hs, tailX, below, rightOf);
+    if (who === 'wheels') startSpin();
+  }
+
+  manHS.addEventListener('click', e => {
+    e.stopPropagation();
+    activate('man', manBub, manHS, manLbl);
+  });
+  wheelHS.addEventListener('click', e => {
+    e.stopPropagation();
+    activate('wheels', wheelBub, wheelHS, wheelLbl);
+  });
+  chimneyLbl.addEventListener('click', e => {
+    e.stopPropagation();
+    activate('chimney', chimneyBub, chimneyLbl, chimneyLbl);
+  });
+  doorLbl.addEventListener('click', e => {
+    e.stopPropagation();
+    activate('door', doorBub, doorLbl, doorLbl);
+  });
+  document.addEventListener('click', e => {
+    const inside = [manBub, wheelBub, chimneyBub, doorBub, manHS, wheelHS, chimneyLbl, doorLbl].some(el => el.contains(e.target));
+    if (!inside) closeAll();
+  });
+
+  // ── Init ───────────────────────────────────────────────────────────────
+  mainImg.addEventListener('load', () => {
+    // Small rAF delay ensures img layout is finalised before we measure
+    requestAnimationFrame(() => requestAnimationFrame(layout));
+  });
+  if (mainImg.complete) {
+    requestAnimationFrame(() => requestAnimationFrame(layout));
+  }
+  mainImg.addEventListener('error', () => {
+    document.querySelector('#container').innerHTML =
+      '<p style="color:red;padding:2rem;font-family:sans-serif">Could not load train4.jpg</p>';
+  });
+
+  window.addEventListener('resize', layout);
+</script>
+</body>
+</html>

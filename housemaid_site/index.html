@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Housemaid — Between Worlds</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --paper: #f5f2ed;
+      --ink: #1a1814;
+      --ink-faint: rgba(26, 24, 20, 0.15);
+      --transition-duration: 700ms;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--paper);
+      font-family: 'Georgia', serif;
+      overflow: hidden;
+    }
+
+    /* ── MAIN SCREEN ── */
+    #main-screen {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #main-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      position: absolute;
+      top: 0; left: 0;
+    }
+
+    /* Steps overlay */
+    #steps-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* Camera overlay — same dimensions as main image, overlaid exactly */
+    #camera-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none; /* overlay img itself doesn't capture clicks */
+    }
+
+    /* Invisible hotspot buttons positioned over each camera drawing */
+    .cam-btn {
+      position: absolute;
+      background: transparent;
+      border: none;
+      cursor: crosshair;
+      pointer-events: all;
+      transition: filter 0.2s;
+    }
+
+    .cam-btn:hover {
+      filter: drop-shadow(0 0 6px rgba(26,24,20,0.5));
+    }
+
+    /* Camera buttons — positioned via JS to account for object-fit:contain letterboxing */
+    .cam-btn {
+      transform: none; /* reset any lingering transforms */
+    }
+
+    /* ── SCENE PAGES ── */
+    .scene-page {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-duration) ease;
+      background: var(--paper);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scene-page.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .scene-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* ── ESCAPE BUTTON ── */
+    .escape-btn {
+      position: fixed;
+      top: 22px;
+      right: 28px;
+      z-index: 200;
+      background: transparent;
+      border: 1.5px solid var(--ink);
+      color: var(--ink);
+      font-family: 'Georgia', serif;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 7px 16px;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, background 0.2s, color 0.2s;
+    }
+
+    .escape-btn.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .escape-btn:hover {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    /* ── TICKET MODAL ── */
+    #ticket-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    #ticket-modal.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #ticket-backdrop {
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background: rgba(26, 24, 20, 0.35);
+    }
+
+    #ticket-img {
+      position: relative;
+      max-width: 70vw;
+      max-height: 70vh;
+      object-fit: contain;
+    }
+
+    /* ── HORN BUTTON ── */
+    #btn-horn {
+      position: absolute;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      pointer-events: all;
+    }
+
+    /* ── TICKET BUTTON ── */
+    #btn-ticket {
+      position: absolute;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      pointer-events: all;
+    }
+
+    /* ── AUDIO TEXT OVERLAY ── */
+    #audio-text-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-duration) ease;
+      z-index: 10;
+    }
+
+    #audio-text-overlay.active {
+      opacity: 1;
+      pointer-events: none; /* overlay itself never blocks clicks below */
+    }
+
+    #audio-text-img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+    }
+
+    #audio-text-close {
+      position: absolute; /* positioned by JS near the text */
+      z-index: 50;
+      background: transparent;
+      border: 1.5px solid var(--ink);
+      color: var(--ink);
+      font-family: 'Georgia', serif;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      cursor: pointer;
+      pointer-events: all;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    #audio-text-close:hover {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    /* ── TITLE LABEL ── */
+    #title-label {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── MAIN SCREEN ── -->
+<div id="main-screen">
+  <img id="main-img" src="housemaid_main.png" alt="The Housemaid — main scene" />
+  <img id="camera-overlay" src="camera_buttons_-_screen_overlay.png" alt="" aria-hidden="true" />
+  <img id="steps-overlay" src="steps.png" alt="" aria-hidden="true" />
+
+  <!-- Hotspot buttons -->
+  <button class="cam-btn" id="cam-funeral"  aria-label="Open funeral scene"  onclick="openScene('scene-funeral')"></button>
+  <button class="cam-btn" id="cam-window"   aria-label="Open window scene"   onclick="openScene('scene-window')"></button>
+  <button class="cam-btn" id="cam-train1"   aria-label="Open train scene 1"  onclick="openScene('scene-train1')"></button>
+  <button class="cam-btn" id="cam-train3"   aria-label="Open train scene 3"  onclick="openScene('scene-train3')"></button>
+
+  <!-- Horn sound button -->
+  <button id="btn-horn"   aria-label="Sound the horn" onclick="soundHorn()"></button>
+  <!-- Ticket lightbox button -->
+  <button id="btn-ticket" aria-label="Open ticket"    onclick="openTicket()"></button>
+
+  <!-- Audio text overlay — appears on first horn click only -->
+  <div id="audio-text-overlay">
+    <img id="audio-text-img" src="audio%20text.png" alt="" aria-hidden="true" />
+    <button id="audio-text-close" onclick="closeAudioText()">&#x2715;&nbsp; Close</button>
+  </div>
+
+  <span id="title-label">The Housemaid &nbsp;·&nbsp; Between Worlds</span>
+</div>
+
+<!-- ── SCENE PAGES ── -->
+<div class="scene-page" id="scene-funeral">
+  <img class="scene-img" src="funeral.png" alt="Funeral scene" />
+</div>
+
+<div class="scene-page" id="scene-window">
+  <img class="scene-img" src="train_2_-_window.png" alt="Train window scene" />
+</div>
+
+<div class="scene-page" id="scene-train1">
+  <img class="scene-img" src="train_1.png" alt="Train scene 1" />
+</div>
+
+<div class="scene-page" id="scene-train3">
+  <img class="scene-img" src="train_3.png" alt="Train scene 3" />
+</div>
+
+<!-- ── TICKET MODAL ── -->
+<div id="ticket-modal" role="dialog" aria-modal="true" aria-label="Ticket">
+  <div id="ticket-backdrop" onclick="closeTicket()"></div>
+  <img id="ticket-img" src="ticket.png" alt="Train ticket" />
+</div>
+
+<!-- ── ESCAPE BUTTON ── -->
+<button class="escape-btn" id="escape-btn" onclick="closeScene()">&#x2715;&nbsp; Close</button>
+
+<!-- ── HORN AUDIO ── -->
+<audio id="horn-audio-1" src="audio%201.mp3" preload="auto"></audio>
+<audio id="horn-audio-2" src="audio%202.mp3" preload="auto"></audio>
+<audio id="horn-audio-3" src="audio%203.mp3" preload="auto"></audio>
+
+<script>
+  let currentScene = null;
+  let hornIndex = 0;
+  let hornTextShown = false;
+
+  function openScene(sceneId) {
+    if (currentScene) {
+      document.getElementById(currentScene).classList.remove('active');
+    }
+    // Small delay so if switching directly, previous fade has started
+    requestAnimationFrame(() => {
+      const el = document.getElementById(sceneId);
+      el.classList.add('active');
+      document.getElementById('escape-btn').classList.add('visible');
+      currentScene = sceneId;
+    });
+  }
+
+  function closeScene() {
+    if (!currentScene) return;
+    const el = document.getElementById(currentScene);
+    el.classList.remove('active');
+    document.getElementById('escape-btn').classList.remove('visible');
+    currentScene = null;
+  }
+
+  // Escape key also closes
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeScene(); closeTicket(); closeAudioText(); }
+  });
+
+  function openTicket() {
+    document.getElementById('ticket-modal').classList.add('active');
+  }
+
+  function closeTicket() {
+    document.getElementById('ticket-modal').classList.remove('active');
+  }
+
+  function soundHorn() {
+    hornIndex = (hornIndex % 3) + 1;
+    const audio = document.getElementById('horn-audio-' + hornIndex);
+    audio.currentTime = 0;
+    audio.play();
+    if (!hornTextShown) {
+      hornTextShown = true;
+      document.getElementById('audio-text-overlay').classList.add('active');
+    }
+  }
+
+  function closeAudioText() {
+    document.getElementById('audio-text-overlay').classList.remove('active');
+  }
+
+  // All hotspot positions as fractions of the 1920×1200 image (cx/cy = centre, w/h = button size)
+  const CAMERAS = [
+    { id: 'cam-funeral', cx: 0.142, cy: 0.237, w: 0.08, h: 0.09 },
+    { id: 'cam-window',  cx: 0.531, cy: 0.578, w: 0.06, h: 0.09 },
+    { id: 'cam-train1',  cx: 0.923, cy: 0.572, w: 0.10, h: 0.09 },
+    { id: 'cam-train3',  cx: 0.574, cy: 0.889, w: 0.08, h: 0.10 },
+    { id: 'btn-horn',    cx: 0.088, cy: 0.470, w: 0.06, h: 0.08 },
+    { id: 'btn-ticket',  cx: 0.885, cy: 0.904, w: 0.14, h: 0.10 },
+  ];
+
+  const IMG_W = 1920, IMG_H = 1200;
+
+  function positionButtons() {
+    const container = document.getElementById('main-screen');
+    const cW = container.clientWidth;
+    const cH = container.clientHeight;
+
+    // Compute rendered image rect (object-fit: contain)
+    let rW, rH, offX, offY;
+    if (cW / cH > IMG_W / IMG_H) {
+      rH = cH; rW = cH * (IMG_W / IMG_H);
+      offX = (cW - rW) / 2; offY = 0;
+    } else {
+      rW = cW; rH = cW * (IMG_H / IMG_W);
+      offX = 0; offY = (cH - rH) / 2;
+    }
+
+    CAMERAS.forEach(({ id, cx, cy, w, h }) => {
+      const btn = document.getElementById(id);
+      const bW = w * rW, bH = h * rH;
+      btn.style.left   = (offX + cx * rW - bW / 2) + 'px';
+      btn.style.top    = (offY + cy * rH - bH / 2) + 'px';
+      btn.style.width  = bW + 'px';
+      btn.style.height = bH + 'px';
+    });
+  }
+
+  // Position the audio-text close button using audio text.png's own coordinate space
+  const ATXT_W = 4098, ATXT_H = 2304;
+
+  function positionAudioTextClose() {
+    const container = document.getElementById('main-screen');
+    const cW = container.clientWidth;
+    const cH = container.clientHeight;
+
+    let rW, rH, offX, offY;
+    if (cW / cH > ATXT_W / ATXT_H) {
+      rH = cH; rW = cH * (ATXT_W / ATXT_H);
+      offX = (cW - rW) / 2; offY = 0;
+    } else {
+      rW = cW; rH = cW * (ATXT_H / ATXT_W);
+      offX = 0; offY = (cH - rH) / 2;
+    }
+
+    // Place X just to the right of the text block (text ends ~x=0.20, top ~y=0.024)
+    const btn = document.getElementById('audio-text-close');
+    btn.style.left = (offX + 0.205 * rW) + 'px';
+    btn.style.top  = (offY + 0.010 * rH) + 'px';
+  }
+
+  positionButtons();
+  positionAudioTextClose();
+  window.addEventListener('resize', () => { positionButtons(); positionAudioTextClose(); });
+</script>
+
+</body>
+</html>

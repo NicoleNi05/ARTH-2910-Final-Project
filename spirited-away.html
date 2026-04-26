@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spirited Away Interactive Draft</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Covered+By+Your+Grace&family=ZCOOL+XiaoWei&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="scene-frame" aria-label="Interactive train scene">
+        <div class="scene" id="scene">
+          <img class="layer layer-sky" src="asset/sky.png" alt="" />
+          <div class="cloud-strip" aria-hidden="true">
+            <img class="layer layer-clouds" src="asset/clouds.png" alt="" />
+            <img class="layer layer-clouds cloud-copy" src="asset/clouds.png" alt="" />
+          </div>
+          <img class="layer layer-train" src="asset/train.png" alt="" />
+          <img class="layer layer-passenger passenger-one" src="asset/passenger1.png" alt="" />
+          <img class="layer layer-passenger passenger-two" src="asset/passenger2.png" alt="" />
+          <img class="layer layer-passenger passenger-three" src="asset/passenger3.png" alt="" />
+          <img class="layer layer-bell" src="asset/wind bell.png" alt="" />
+          <img class="layer layer-ticket" src="asset/ticket.png" alt="" />
+          <img class="layer layer-wave layer-wave-bottom" src="asset/wave2.png" alt="" />
+          <img class="layer layer-wave layer-wave-top" src="asset/wave1.png" alt="" />
+
+          <button
+            class="hotspot hotspot-bell"
+            id="bellButton"
+            type="button"
+            aria-label="Pull the wind bell"
+          >
+            <span>Wind Bell</span>
+          </button>
+
+          <button
+            class="hotspot hotspot-ticket"
+            id="ticketButton"
+            type="button"
+            data-dialogue="Destination: Swamp Bottom Station. A one-way passage into a place suspended between memory, home, and the spirit world."
+            aria-label="Read the ticket destination"
+          >
+            <span>Ticket</span>
+          </button>
+
+          <button
+            class="hotspot hotspot-passenger hotspot-passenger-1"
+            type="button"
+            data-dialogue="Sometimes the quietest journeys carry the most memories."
+            aria-label="Talk to passenger one"
+          >
+            <span>Passenger 1</span>
+          </button>
+
+          <button
+            class="hotspot hotspot-passenger hotspot-passenger-2"
+            type="button"
+            data-dialogue="The sea outside feels endless, but the carriage still feels like a room inside a dream."
+            aria-label="Talk to passenger two"
+          >
+            <span>Passenger 2</span>
+          </button>
+
+          <button
+            class="hotspot hotspot-passenger hotspot-passenger-3"
+            type="button"
+            data-dialogue="Every stop looks unfamiliar, yet somehow I feel closer to home."
+            aria-label="Talk to passenger three"
+          >
+            <span>Passenger 3</span>
+          </button>
+
+          <button class="thought-bubble thought-one" type="button" data-passenger="1" aria-label="Open passenger one dialogue">
+            ...
+          </button>
+
+          <button class="thought-bubble thought-two" type="button" data-passenger="2" aria-label="Open passenger two dialogue">
+            ...
+          </button>
+
+          <button class="thought-bubble thought-three" type="button" data-passenger="3" aria-label="Open passenger three dialogue">
+            ...
+          </button>
+
+          <div class="speech-bubble hidden" id="speechBubble" role="status" aria-live="polite">
+            <button class="speech-close" id="speechClose" type="button" aria-label="Close dialogue">
+              ×
+            </button>
+            <p id="speechText"></p>
+          </div>
+
+          <div class="scene-buttons" aria-label="Train scene buttons">
+            <button class="scene-button" type="button" data-scene="1">Train Scene 1</button>
+            <button class="scene-button" type="button" data-scene="2">Train Scene 2</button>
+            <button class="scene-button" type="button" data-scene="3">Train Scene 3</button>
+          </div>
+
+          <div class="music-status" id="musicStatus" aria-live="polite">
+            Pull the bell to begin the sound.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="scene-overlay hidden" id="sceneOverlay" aria-live="polite">
+      <button class="scene-overlay-close" id="sceneOverlayClose" type="button" aria-label="Close scene image">
+        ×
+      </button>
+      <div class="scene-overlay-card">
+        <img id="sceneOverlayImage" src="" alt="Train scene still" />
+        <div class="scene-overlay-text">
+          <h2 id="sceneOverlayTitle"></h2>
+          <p id="sceneOverlayDescription"></p>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
