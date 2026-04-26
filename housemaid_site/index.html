@@ -26,6 +26,36 @@
       overflow: hidden;
     }
 
+    .carriage-nav {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      border: 1.5px solid var(--ink);
+      background: rgba(245, 242, 237, 0.92);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 1.7rem;
+      line-height: 1;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.14);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    .carriage-nav.prev { left: 18px; }
+    .carriage-nav.next { right: 18px; }
+
+    .carriage-nav:hover,
+    .carriage-nav:focus-visible {
+      background: #fffdf8;
+    }
+
     /* ── MAIN SCREEN ── */
     #main-screen {
       position: relative;
@@ -254,6 +284,8 @@
   </style>
 </head>
 <body>
+<a class="carriage-nav prev" href="../spirited-away.html" aria-label="Go to the previous carriage">‹</a>
+<a class="carriage-nav next" href="../i%20was%20born...%20but/train-interactive.html" aria-label="Go to the next carriage">›</a>
 
 <!-- ── MAIN SCREEN ── -->
 <div id="main-screen">

@@ -11,8 +11,40 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
+    <style>
+      .carriage-nav {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 40;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        border: 2px solid rgba(98, 76, 64, 0.72);
+        background: rgba(248, 240, 223, 0.92);
+        color: #36454f;
+        text-decoration: none;
+        font-family: "ZCOOL XiaoWei", serif;
+        font-size: 1.7rem;
+        box-shadow: 0 12px 28px rgba(20, 21, 24, 0.16);
+        backdrop-filter: blur(6px);
+      }
+
+      .carriage-nav:hover,
+      .carriage-nav:focus-visible {
+        background: rgba(255, 248, 236, 0.98);
+      }
+
+      .carriage-nav.next {
+        right: 1rem;
+      }
+    </style>
   </head>
   <body>
+    <a class="carriage-nav next" href="housemaid_site/index.html" aria-label="Go to the next carriage">›</a>
     <main class="page-shell">
       <section class="scene-frame" aria-label="Interactive train scene">
         <div class="scene" id="scene">

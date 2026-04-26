@@ -8,6 +8,37 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #dedad3; }
 
+    .carriage-nav {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 80;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      border: 1.5px solid #2d2d2d;
+      background: rgba(255, 253, 245, 0.94);
+      color: #1a1a1a;
+      text-decoration: none;
+      font-family: Georgia, serif;
+      font-size: 1.7rem;
+      line-height: 1;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.14);
+      backdrop-filter: blur(6px);
+    }
+
+    .carriage-nav.prev {
+      left: 18px;
+    }
+
+    .carriage-nav:hover,
+    .carriage-nav:focus-visible {
+      background: #fffefa;
+    }
+
     #container {
       position: relative;
       width: 100vw;
@@ -139,6 +170,7 @@
   </style>
 </head>
 <body>
+<a class="carriage-nav prev" href="../housemaid_site/index.html" aria-label="Go to the previous carriage">‹</a>
 <div id="container">
   <img id="main-img" src="train7.png" alt="Train illustration">
 
